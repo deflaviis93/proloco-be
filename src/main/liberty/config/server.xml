@@ -1,7 +1,8 @@
 <server description="proloco-be">
 
     <featureManager>
-        <feature>jakartaee-10.0</feature>
+        <feature>webProfile-10.0</feature>
+        <feature>jdbc-4.3</feature>
     </featureManager>
 
     <httpEndpoint id="defaultHttpEndpoint"
@@ -10,6 +11,18 @@
 
     <applicationManager autoExpand="true"/>
 
-    <webApplication contextRoot="/" location="proloco-be.war"/>
+    <library id="postgresql-library">
+        <fileset dir="${shared.resource.dir}/jdbc" includes="postgresql-*.jar"/>
+    </library>
+
+    <dataSource jndiName="jdbc/prolocobeDS">
+        <jdbcDriver libraryRef="postgresql-library"/>
+        <properties.postgresql
+                serverName="${env.POSTGRES_HOST}"
+                portNumber="${env.POSTGRES_PORT}"
+                databaseName="${env.POSTGRES_DB}"
+                user="${env.POSTGRES_USER}"
+                password="${env.POSTGRES_PASSWORD}"/>
+    </dataSource>
 
 </server>

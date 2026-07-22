@@ -22,7 +22,7 @@ turni volontari granulare per stand/cucina/biglietteria.
 - **Framework**: Jakarta EE 10 puro — nessun framework applicativo aggiuntivo (no Spring)
   - JAX-RS (`jakarta.ws.rs`) per le API REST
   - CDI (`jakarta.enterprise`) per dependency injection
-  - JPA (`jakarta.persistence`) per la persistenza, tramite Hibernate come provider
+  - JPA (`jakarta.persistence`) per la persistenza, tramite EclipseLink come provider (nativo di Open Liberty, feature `persistenceContainer-3.1` — evita conflitti di bytecode-enhancement con provider esterni)
   - Bean Validation (`jakarta.validation`) per la validazione degli input
   - JSON-B (`jakarta.json.bind`) per serializzazione JSON
 - **Database**: PostgreSQL
