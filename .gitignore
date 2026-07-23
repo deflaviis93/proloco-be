@@ -5,7 +5,6 @@ target/
 .kotlin
 
 .env
-src/main/liberty/config/server.env
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

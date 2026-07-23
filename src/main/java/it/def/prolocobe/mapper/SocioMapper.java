@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "spring")
 public interface SocioMapper {
 
     SocioDto toDto(Socio socio);

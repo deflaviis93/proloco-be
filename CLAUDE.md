@@ -4,8 +4,12 @@ Backend per la gestione della Pro Loco del paese di Nerito.
 
 ## Stato del progetto
 
-Progetto nuovo, in fase di avvio. Lo scheletro tecnico esiste (build Maven, deploy Liberty),
-il dominio applicativo (entità, endpoint, DB) è ancora da costruire.
+Progetto nuovo, in fase di avvio. Lo scheletro tecnico esiste (build Maven, Spring Boot,
+deploy Docker), il dominio applicativo (entità, endpoint, DB) è ancora da costruire.
+
+Nota: il progetto è partito su Jakarta EE puro + Open Liberty, poi migrato a Spring Boot
+per ridurre l'attrito operativo (jar eseguibile invece di application server, deploy più
+semplice) — scelta corretta per un progetto community-size senza vincoli enterprise.
 
 ## Scope funzionale (fase 1)
 
@@ -18,16 +22,11 @@ turni volontari granulare per stand/cucina/biglietteria.
 ## Stack tecnico
 
 - **Linguaggio**: Java 21
-- **Application server**: WebSphere Liberty (Open Liberty), deploy come WAR
-- **Framework**: Jakarta EE 10 puro — nessun framework applicativo aggiuntivo (no Spring)
-  - JAX-RS (`jakarta.ws.rs`) per le API REST
-  - CDI (`jakarta.enterprise`) per dependency injection
-  - JPA (`jakarta.persistence`) per la persistenza, tramite EclipseLink come provider (nativo di Open Liberty, feature `persistenceContainer-3.1` — evita conflitti di bytecode-enhancement con provider esterni)
-  - Bean Validation (`jakarta.validation`) per la validazione degli input
-  - JSON-B (`jakarta.json.bind`) per serializzazione JSON
-- **Database**: PostgreSQL
-- **Build**: Maven (wrapper incluso, `./mvnw`)
-- **Autenticazione**: JWT stateless (login → JWT, ruoli come claim: es. admin, socio, volontario)
+- **Framework**: Spring Boot 3 (Spring MVC per le API REST, Spring Data JPA per la persistenza, Spring Validation per la validazione degli input)
+- **Database**: PostgreSQL, provider JPA Hibernate (via Spring Data JPA)
+- **Build**: Maven (wrapper incluso, `./mvnw`), packaging jar eseguibile (`spring-boot-maven-plugin`)
+- **Deploy**: Docker — immagine multi-stage (build Maven → runtime `eclipse-temurin:21-jre`), orchestrata con `docker-compose.yml` insieme al container Postgres
+- **Autenticazione**: JWT stateless (login → JWT, ruoli come claim: es. admin, socio, volontario) — da introdurre (Spring Security)
 
 ## Architettura
 
@@ -42,7 +41,6 @@ turni volontari granulare per stand/cucina/biglietteria.
 ## Prossimi passi
 
 1. Definire lo schema dati per soci/tesserati ed eventi (entità JPA).
-2. Configurare `persistence.xml` con datasource PostgreSQL (o JNDI datasource lato Liberty).
-3. Scaffolding endpoint CRUD minimi per validare il giro completo su Liberty.
-4. Introdurre autenticazione JWT (filtro JAX-RS + gestione ruoli).
-5. Collegare il repository a GitHub e impostare CI di base (build + test).
+2. Scaffolding endpoint CRUD minimi per validare il giro completo (controller → service → repository → DB).
+3. Introdurre autenticazione JWT (Spring Security, filtro + gestione ruoli).
+4. Collegare il repository a GitHub e impostare CI di base (build + test).
