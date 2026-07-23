@@ -11,6 +11,7 @@ import it.def.prolocobe.exception.RisorsaNonTrovataException;
 import it.def.prolocobe.mapper.SocioMapper;
 import it.def.prolocobe.repository.SocioRepository;
 import it.def.prolocobe.repository.UtenteRepository;
+import it.def.prolocobe.util.EmailUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,16 +39,19 @@ public class SocioService {
     }
 
     public SocioCreatoDto create(CreaSocioDto socioDto) {
-        if (utenteRepository.findByEmail(socioDto.email()).isPresent()) {
-            throw new RisorsaGiaEsistenteException("Esiste già un account con email " + socioDto.email());
+        String email = EmailUtils.normalizza(socioDto.email());
+
+        if (utenteRepository.findByEmail(email).isPresent()) {
+            throw new RisorsaGiaEsistenteException("Esiste già un account con email " + email);
         }
 
         Socio socio = socioMapper.toEntity(socioDto);
+        socio.setEmail(email);
 
         String passwordTemporanea = generatorePasswordTemporanea.genera();
 
         Utente utente = new Utente();
-        utente.setEmail(socioDto.email());
+        utente.setEmail(email);
         utente.setPasswordHash(passwordEncoder.encode(passwordTemporanea));
         utente.setRuoli(Set.of(RuoloUtente.SOCIO));
         utente.setAttivo(socioDto.quotaPagata());

@@ -100,6 +100,24 @@ class SocioServiceTest {
     }
 
     @Test
+    void create_normalizzaEmailInMinuscoloPerControlloESalvataggio() {
+        CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
+                "3331234567", " Mario.Rossi@Example.COM ", LocalDate.of(2026, 1, 15), false, null);
+        Socio entity = new Socio();
+
+        when(utenteRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.empty());
+        when(socioMapper.toEntity(inputDto)).thenReturn(entity);
+        when(passwordEncoder.encode(any())).thenReturn("hash-fittizio");
+        when(socioRepository.save(entity)).thenReturn(entity);
+        when(socioMapper.toDto(entity)).thenReturn(null);
+
+        socioService.create(inputDto);
+
+        assertEquals("mario.rossi@example.com", entity.getEmail());
+        assertEquals("mario.rossi@example.com", entity.getUtente().getEmail());
+    }
+
+    @Test
     void create_lanciaEccezioneSeEmailGiaUsata() {
         CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
                 "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), false, null);

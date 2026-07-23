@@ -72,6 +72,22 @@ class UtenteServiceTest {
     }
 
     @Test
+    void create_normalizzaEmailInMinuscoloPerControlloESalvataggio() {
+        CreaUtenteDto inputDto = new CreaUtenteDto(" Mario.Rossi@Example.COM ", "password123", Set.of(RuoloUtente.GESTIONE_SOCI));
+        Utente entity = new Utente();
+
+        when(utenteRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.empty());
+        when(utenteMapper.toEntity(inputDto)).thenReturn(entity);
+        when(passwordEncoder.encode("password123")).thenReturn("hash-fittizio");
+        when(utenteRepository.save(entity)).thenReturn(entity);
+        when(utenteMapper.toDto(entity)).thenReturn(null);
+
+        utenteService.create(inputDto);
+
+        assertEquals("mario.rossi@example.com", entity.getEmail());
+    }
+
+    @Test
     void create_lanciaEccezioneSeEmailGiaPresente() {
         CreaUtenteDto inputDto = new CreaUtenteDto("mario.rossi@example.com", "password123", Set.of(RuoloUtente.GESTIONE_SOCI));
         when(utenteRepository.findByEmail(inputDto.email())).thenReturn(Optional.of(new Utente()));

@@ -10,6 +10,7 @@ import it.def.prolocobe.exception.RisorsaGiaEsistenteException;
 import it.def.prolocobe.exception.RisorsaNonTrovataException;
 import it.def.prolocobe.mapper.UtenteMapper;
 import it.def.prolocobe.repository.UtenteRepository;
+import it.def.prolocobe.util.EmailUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,11 +33,14 @@ public class UtenteService {
     }
 
     public DettaglioUtenteDto create(CreaUtenteDto utenteDto) {
-        if (utenteRepository.findByEmail(utenteDto.email()).isPresent()) {
-            throw new RisorsaGiaEsistenteException("Esiste già un utente con email " + utenteDto.email());
+        String email = EmailUtils.normalizza(utenteDto.email());
+
+        if (utenteRepository.findByEmail(email).isPresent()) {
+            throw new RisorsaGiaEsistenteException("Esiste già un utente con email " + email);
         }
 
         Utente utente = utenteMapper.toEntity(utenteDto);
+        utente.setEmail(email);
         utente.setPasswordHash(passwordEncoder.encode(utenteDto.password()));
 
         return utenteMapper.toDto(utenteRepository.save(utente));

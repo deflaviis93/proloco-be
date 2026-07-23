@@ -66,6 +66,24 @@ class AuthServiceTest {
     }
 
     @Test
+    void login_normalizzaEmailPrimaDellaRicerca() {
+        Utente utente = new Utente();
+        utente.setId(1L);
+        utente.setEmail("mario.rossi@example.com");
+        utente.setPasswordHash("hash");
+        utente.setRuoli(Set.of(RuoloUtente.SOCIO));
+        utente.setAttivo(true);
+        LoginDto loginDto = new LoginDto(" Mario.Rossi@Example.COM ", "password123");
+
+        when(utenteRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.of(utente));
+        when(passwordEncoder.matches("password123", "hash")).thenReturn(true);
+
+        LoginRispostaDto result = authService.login(loginDto);
+
+        assertFalse(result.token().isBlank());
+    }
+
+    @Test
     void login_lanciaEccezioneSeEmailNonEsiste() {
         LoginDto loginDto = new LoginDto("sconosciuto@example.com", "password123");
         when(utenteRepository.findByEmail("sconosciuto@example.com")).thenReturn(Optional.empty());

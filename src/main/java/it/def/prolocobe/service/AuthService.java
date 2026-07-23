@@ -7,6 +7,7 @@ import it.def.prolocobe.exception.AccountNonAttivoException;
 import it.def.prolocobe.exception.CredenzialiNonValideException;
 import it.def.prolocobe.repository.UtenteRepository;
 import it.def.prolocobe.security.JwtService;
+import it.def.prolocobe.util.EmailUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class AuthService {
     }
 
     public LoginRispostaDto login(LoginDto loginDto) {
-        Utente utente = utenteRepository.findByEmail(loginDto.email())
+        Utente utente = utenteRepository.findByEmail(EmailUtils.normalizza(loginDto.email()))
                 .orElseThrow(() -> new CredenzialiNonValideException("Email o password non validi"));
 
         if (!passwordEncoder.matches(loginDto.password(), utente.getPasswordHash())) {
