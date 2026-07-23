@@ -1,0 +1,79 @@
+package it.def.prolocobe.service;
+
+import it.def.prolocobe.dto.input.CambiaPasswordDto;
+import it.def.prolocobe.dto.input.CreaUtenteDto;
+import it.def.prolocobe.dto.output.DettaglioUtenteDto;
+import it.def.prolocobe.dto.output.UtentePasswordResettataDto;
+import it.def.prolocobe.entity.Utente;
+import it.def.prolocobe.exception.CredenzialiNonValideException;
+import it.def.prolocobe.exception.RisorsaGiaEsistenteException;
+import it.def.prolocobe.exception.RisorsaNonTrovataException;
+import it.def.prolocobe.mapper.UtenteMapper;
+import it.def.prolocobe.repository.UtenteRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class UtenteService {
+
+    private final UtenteRepository utenteRepository;
+    private final UtenteMapper utenteMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final GeneratorePasswordTemporanea generatorePasswordTemporanea;
+
+    public UtenteService(UtenteRepository utenteRepository, UtenteMapper utenteMapper, PasswordEncoder passwordEncoder,
+                          GeneratorePasswordTemporanea generatorePasswordTemporanea) {
+        this.utenteRepository = utenteRepository;
+        this.utenteMapper = utenteMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.generatorePasswordTemporanea = generatorePasswordTemporanea;
+    }
+
+    public DettaglioUtenteDto create(CreaUtenteDto utenteDto) {
+        if (utenteRepository.findByEmail(utenteDto.email()).isPresent()) {
+            throw new RisorsaGiaEsistenteException("Esiste già un utente con email " + utenteDto.email());
+        }
+
+        Utente utente = utenteMapper.toEntity(utenteDto);
+        utente.setPasswordHash(passwordEncoder.encode(utenteDto.password()));
+
+        return utenteMapper.toDto(utenteRepository.save(utente));
+    }
+
+    public List<DettaglioUtenteDto> findAll() {
+        return utenteMapper.toDtoList(utenteRepository.findAll());
+    }
+
+    public DettaglioUtenteDto findById(Long id) {
+        return utenteRepository.findById(id)
+                .map(utenteMapper::toDto)
+                .orElseThrow(() -> new RisorsaNonTrovataException("Utente con id " + id + " non trovato"));
+    }
+
+    public void cambiaPassword(Long id, CambiaPasswordDto cambiaPasswordDto) {
+        Utente utente = utenteRepository.findById(id)
+                .orElseThrow(() -> new RisorsaNonTrovataException("Utente con id " + id + " non trovato"));
+
+        if (!passwordEncoder.matches(cambiaPasswordDto.passwordAttuale(), utente.getPasswordHash())) {
+            throw new CredenzialiNonValideException("Password attuale non corretta");
+        }
+
+        utente.setPasswordHash(passwordEncoder.encode(cambiaPasswordDto.nuovaPassword()));
+        utente.setDeveCambiarePassword(false);
+        utenteRepository.save(utente);
+    }
+
+    public UtentePasswordResettataDto resetPassword(Long id) {
+        Utente utente = utenteRepository.findById(id)
+                .orElseThrow(() -> new RisorsaNonTrovataException("Utente con id " + id + " non trovato"));
+
+        String passwordTemporanea = generatorePasswordTemporanea.genera();
+        utente.setPasswordHash(passwordEncoder.encode(passwordTemporanea));
+        utente.setDeveCambiarePassword(true);
+
+        Utente salvato = utenteRepository.save(utente);
+        return new UtentePasswordResettataDto(utenteMapper.toDto(salvato), passwordTemporanea);
+    }
+}

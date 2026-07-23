@@ -26,7 +26,7 @@ turni volontari granulare per stand/cucina/biglietteria.
 - **Database**: PostgreSQL, provider JPA Hibernate (via Spring Data JPA)
 - **Build**: Maven (wrapper incluso, `./mvnw`), packaging jar eseguibile (`spring-boot-maven-plugin`)
 - **Deploy**: Docker — immagine multi-stage (build Maven → runtime `eclipse-temurin:21-jre`), orchestrata con `docker-compose.yml` insieme al container Postgres
-- **Autenticazione**: JWT stateless (login → JWT, ruoli come claim: es. admin, socio, volontario) — da introdurre (Spring Security)
+- **Autenticazione**: JWT stateless via Spring Security. Login su `POST /api/auth/login` (email + password), token HS256 valido 8 ore con claim `ruoli` e `deveCambiarePassword`. Endpoint protetti con `@PreAuthorize` in base al ruolo (`ADMIN`, `SOCIO`, `VOLONTARIO`, `GESTIONE_SOCI`). Nessuna registrazione pubblica: solo chi ha ruolo `ADMIN`/`GESTIONE_SOCI` crea nuovi soci/utenti. Il primo account `ADMIN` va creato manualmente via SQL (nessun bootstrap applicativo) — vedi `security/JwtService.java` e `config/SecurityConfig.java`.
 
 ## Architettura
 
@@ -40,7 +40,6 @@ turni volontari granulare per stand/cucina/biglietteria.
 
 ## Prossimi passi
 
-1. Definire lo schema dati per soci/tesserati ed eventi (entità JPA).
-2. Scaffolding endpoint CRUD minimi per validare il giro completo (controller → service → repository → DB).
-3. Introdurre autenticazione JWT (Spring Security, filtro + gestione ruoli).
-4. Collegare il repository a GitHub e impostare CI di base (build + test).
+1. Modellare eventi/manifestazioni (entità JPA, turni volontari, prenotazioni posti).
+2. Collegare il repository a GitHub e impostare CI di base (build + test).
+3. Valutare test di integrazione (MockMvc + Testcontainers) per il flusso di autenticazione end-to-end.

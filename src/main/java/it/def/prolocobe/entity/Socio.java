@@ -1,5 +1,6 @@
 package it.def.prolocobe.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,7 +43,13 @@ public class Socio {
     @Column(name = "data_iscrizione", nullable = false)
     private LocalDate dataIscrizione;
 
-    @OneToOne
+    @Column(name = "quota_pagata", nullable = false)
+    private boolean quotaPagata;
+
+    @Column(name = "data_ultimo_pagamento")
+    private LocalDate dataUltimoPagamento;
+
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "utente_id", unique = true)
     private Utente utente;
 

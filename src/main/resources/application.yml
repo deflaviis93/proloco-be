@@ -8,5 +8,11 @@ spring:
     hibernate:
       ddl-auto: update
 
+
 server:
   port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:sviluppo-locale-cambiami-in-produzione-almeno-32-caratteri-lunga}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
