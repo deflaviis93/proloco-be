@@ -7,6 +7,9 @@ import it.def.prolocobe.dto.output.DettaglioTesseramentoDto;
 import it.def.prolocobe.dto.output.SocioCreatoDto;
 import it.def.prolocobe.service.SocioService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,8 +32,8 @@ public class SocioController {
     }
 
     @GetMapping
-    public List<DettaglioSocioDto> list() {
-        return socioService.findAll();
+    public Page<DettaglioSocioDto> list(@PageableDefault(size = 20, sort = "cognome") Pageable pageable) {
+        return socioService.findAll(pageable);
     }
 
     @GetMapping("/{id}")

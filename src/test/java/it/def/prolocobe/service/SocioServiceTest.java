@@ -20,6 +20,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
@@ -123,18 +127,17 @@ class SocioServiceTest {
     }
 
     @Test
-    void findAll_restituisceIlRisultatoMappatoDalRepository() {
+    void findAll_restituisceLaPaginaMappataDalRepository() {
         Socio socio = new Socio();
-        List<DettaglioSocioDto> expected = List.of(
-                new DettaglioSocioDto(1L, "Mario", "Rossi", null, null, null, LocalDate.of(2026, 1, 15), false, false)
-        );
+        DettaglioSocioDto expectedDto = new DettaglioSocioDto(1L, "Mario", "Rossi", null, null, null, LocalDate.of(2026, 1, 15), false, false);
+        Pageable pageable = PageRequest.of(0, 20);
 
-        when(socioRepository.findAll()).thenReturn(List.of(socio));
-        when(socioMapper.toDtoList(any())).thenReturn(expected);
+        when(socioRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(socio)));
+        when(socioMapper.toDto(socio)).thenReturn(expectedDto);
 
-        List<DettaglioSocioDto> result = socioService.findAll();
+        Page<DettaglioSocioDto> result = socioService.findAll(pageable);
 
-        assertEquals(expected, result);
+        assertEquals(List.of(expectedDto), result.getContent());
     }
 
     @Test

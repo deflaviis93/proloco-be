@@ -17,6 +17,8 @@ import it.def.prolocobe.repository.SocioRepository;
 import it.def.prolocobe.repository.TesseramentoRepository;
 import it.def.prolocobe.repository.UtenteRepository;
 import it.def.prolocobe.util.EmailUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,8 +77,8 @@ public class SocioService {
     }
 
     @Transactional(readOnly = true)
-    public List<DettaglioSocioDto> findAll() {
-        return socioMapper.toDtoList(socioRepository.findAll());
+    public Page<DettaglioSocioDto> findAll(Pageable pageable) {
+        return socioRepository.findAll(pageable).map(socioMapper::toDto);
     }
 
     @Transactional(readOnly = true)
