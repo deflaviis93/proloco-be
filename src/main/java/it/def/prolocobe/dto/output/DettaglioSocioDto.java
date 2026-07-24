@@ -10,8 +10,7 @@ public record DettaglioSocioDto(
         String telefono,
         String email,
         LocalDate dataIscrizione,
-        boolean quotaPagata,
-        LocalDate dataUltimoPagamento,
+        boolean inRegola,
         boolean accountAttivo
 ) {
 }

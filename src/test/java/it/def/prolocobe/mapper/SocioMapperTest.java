@@ -3,10 +3,12 @@ package it.def.prolocobe.mapper;
 import it.def.prolocobe.dto.input.CreaSocioDto;
 import it.def.prolocobe.dto.output.DettaglioSocioDto;
 import it.def.prolocobe.entity.Socio;
+import it.def.prolocobe.entity.Tesseramento;
 import it.def.prolocobe.entity.Utente;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,8 +30,6 @@ class SocioMapperTest {
         socio.setTelefono("3331234567");
         socio.setEmail("mario.rossi@example.com");
         socio.setDataIscrizione(LocalDate.of(2026, 1, 15));
-        socio.setQuotaPagata(true);
-        socio.setDataUltimoPagamento(LocalDate.of(2026, 1, 20));
 
         DettaglioSocioDto dto = socioMapper.toDto(socio);
 
@@ -40,8 +40,6 @@ class SocioMapperTest {
         assertEquals("3331234567", dto.telefono());
         assertEquals("mario.rossi@example.com", dto.email());
         assertEquals(LocalDate.of(2026, 1, 15), dto.dataIscrizione());
-        assertTrue(dto.quotaPagata());
-        assertEquals(LocalDate.of(2026, 1, 20), dto.dataUltimoPagamento());
     }
 
     @Test
@@ -66,10 +64,42 @@ class SocioMapperTest {
     }
 
     @Test
+    void toDto_inRegolaFalseSenzaTesseramenti() {
+        Socio socio = new Socio();
+
+        DettaglioSocioDto dto = socioMapper.toDto(socio);
+
+        assertFalse(dto.inRegola());
+    }
+
+    @Test
+    void toDto_inRegolaTrueSeTesseramentoAnnoCorrente() {
+        Socio socio = new Socio();
+        Tesseramento tesseramento = new Tesseramento();
+        tesseramento.setAnno(Year.now().getValue());
+        socio.getTesseramenti().add(tesseramento);
+
+        DettaglioSocioDto dto = socioMapper.toDto(socio);
+
+        assertTrue(dto.inRegola());
+    }
+
+    @Test
+    void toDto_inRegolaFalseSeSoloTesseramentiPassati() {
+        Socio socio = new Socio();
+        Tesseramento tesseramento = new Tesseramento();
+        tesseramento.setAnno(Year.now().getValue() - 1);
+        socio.getTesseramenti().add(tesseramento);
+
+        DettaglioSocioDto dto = socioMapper.toDto(socio);
+
+        assertFalse(dto.inRegola());
+    }
+
+    @Test
     void toEntity_ignoraIdEUtente() {
         CreaSocioDto dto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
-                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15),
-                false, null);
+                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15));
 
         Socio socio = socioMapper.toEntity(dto);
 

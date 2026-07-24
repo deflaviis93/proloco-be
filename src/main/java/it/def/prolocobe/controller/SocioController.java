@@ -1,14 +1,14 @@
 package it.def.prolocobe.controller;
 
-import it.def.prolocobe.dto.input.AttivaAccountDto;
 import it.def.prolocobe.dto.input.CreaSocioDto;
+import it.def.prolocobe.dto.input.CreaTesseramentoDto;
 import it.def.prolocobe.dto.output.DettaglioSocioDto;
+import it.def.prolocobe.dto.output.DettaglioTesseramentoDto;
 import it.def.prolocobe.dto.output.SocioCreatoDto;
 import it.def.prolocobe.service.SocioService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,8 +43,13 @@ public class SocioController {
         return socioService.create(socioDto);
     }
 
-    @PatchMapping("/{id}/attiva")
-    public DettaglioSocioDto attiva(@PathVariable Long id, @Valid @RequestBody AttivaAccountDto attivaAccountDto) {
-        return socioService.attivaAccount(id, attivaAccountDto.dataPagamento());
+    @GetMapping("/{id}/tesseramenti")
+    public List<DettaglioTesseramentoDto> tesseramenti(@PathVariable Long id) {
+        return socioService.findTesseramenti(id);
+    }
+
+    @PostMapping("/{id}/tesseramenti")
+    public DettaglioSocioDto registraTesseramento(@PathVariable Long id, @Valid @RequestBody CreaTesseramentoDto tesseramentoDto) {
+        return socioService.registraTesseramento(id, tesseramentoDto);
     }
 }

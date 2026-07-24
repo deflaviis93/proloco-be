@@ -7,11 +7,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "socio")
@@ -43,14 +46,11 @@ public class Socio {
     @Column(name = "data_iscrizione", nullable = false)
     private LocalDate dataIscrizione;
 
-    @Column(name = "quota_pagata", nullable = false)
-    private boolean quotaPagata;
-
-    @Column(name = "data_ultimo_pagamento")
-    private LocalDate dataUltimoPagamento;
-
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "utente_id", unique = true)
     private Utente utente;
+
+    @OneToMany(mappedBy = "socio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tesseramento> tesseramenti = new ArrayList<>();
 
 }

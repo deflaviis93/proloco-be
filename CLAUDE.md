@@ -13,7 +13,11 @@ semplice) — scelta corretta per un progetto community-size senza vincoli enter
 
 ## Scope funzionale (fase 1)
 
-- **Gestione socie/tesserati**: anagrafica soci, tessere, quote associative, scadenze di rinnovo.
+- **Gestione socie/tesserati**: anagrafica soci, storico tesseramenti (`Tesseramento`: anno, importo,
+  data pagamento — un socio è "in regola" se ha un tesseramento per l'anno corrente, calcolato
+  al volo, non un flag denormalizzato). Un socio senza tesseramento per l'anno in corso ha
+  l'account sospeso (`Utente.attivo = false`), aggiornato automaticamente alla registrazione
+  di un nuovo tesseramento.
 - **Eventi e manifestazioni**: creazione eventi/sagre, programma, turni volontari, prenotazioni posti.
 
 Fuori scope per ora (da valutare in fasi successive): contabilità/entrate-uscite, gestione
