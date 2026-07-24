@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.Year;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -107,19 +106,5 @@ class SocioMapperTest {
         assertEquals("Mario", socio.getNome());
         assertEquals("Rossi", socio.getCognome());
         assertNull(socio.getUtente());
-    }
-
-    @Test
-    void toDtoList_mappaOgniElemento() {
-        Socio socio1 = new Socio();
-        socio1.setNome("Mario");
-        Socio socio2 = new Socio();
-        socio2.setNome("Luigi");
-
-        List<DettaglioSocioDto> dtos = socioMapper.toDtoList(List.of(socio1, socio2));
-
-        assertEquals(2, dtos.size());
-        assertEquals("Mario", dtos.get(0).nome());
-        assertEquals("Luigi", dtos.get(1).nome());
     }
 }

@@ -15,8 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class UtenteService {
 
     private final UtenteRepository utenteRepository;
@@ -46,10 +48,12 @@ public class UtenteService {
         return utenteMapper.toDto(utenteRepository.save(utente));
     }
 
+    @Transactional(readOnly = true)
     public Page<DettaglioUtenteDto> findAll(Pageable pageable) {
         return utenteRepository.findAll(pageable).map(utenteMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public DettaglioUtenteDto findById(Long id) {
         return utenteRepository.findById(id)
                 .map(utenteMapper::toDto)

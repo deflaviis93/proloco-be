@@ -6,16 +6,12 @@ import it.def.prolocobe.entity.Socio;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.List;
-
 @Mapper(componentModel = "spring")
 public interface SocioMapper {
 
     @Mapping(target = "accountAttivo", expression = "java(socio.getUtente() != null && socio.getUtente().isAttivo())")
     @Mapping(target = "inRegola", expression = "java(socio.getTesseramenti().stream().anyMatch(t -> t.getAnno() == java.time.Year.now().getValue()))")
     DettaglioSocioDto toDto(Socio socio);
-
-    List<DettaglioSocioDto> toDtoList(List<Socio> soci);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "utente", ignore = true)

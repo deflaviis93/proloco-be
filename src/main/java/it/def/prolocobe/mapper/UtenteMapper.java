@@ -6,14 +6,10 @@ import it.def.prolocobe.entity.Utente;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.List;
-
 @Mapper(componentModel = "spring")
 public interface UtenteMapper {
 
     DettaglioUtenteDto toDto(Utente utente);
-
-    List<DettaglioUtenteDto> toDtoList(List<Utente> utenti);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
