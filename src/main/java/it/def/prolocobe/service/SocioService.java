@@ -1,5 +1,6 @@
 package it.def.prolocobe.service;
 
+import it.def.prolocobe.dto.input.AggiornaSocioDto;
 import it.def.prolocobe.dto.input.CreaSocioDto;
 import it.def.prolocobe.dto.input.CreaTesseramentoDto;
 import it.def.prolocobe.dto.output.DettaglioSocioDto;
@@ -72,6 +73,22 @@ public class SocioService {
         utente.setDeveCambiarePassword(true);
         socio.setUtente(utente);
 
+        // Se la quota è pagata già all'iscrizione, si registra subito il primo tesseramento;
+        // se è per l'anno corrente l'account nasce già attivo (e quindi in regola).
+        if (socioDto.tesseramento() != null) {
+            CreaTesseramentoDto tesseramentoDto = socioDto.tesseramento();
+            Tesseramento tesseramento = new Tesseramento();
+            tesseramento.setSocio(socio);
+            tesseramento.setAnno(tesseramentoDto.anno());
+            tesseramento.setImporto(tesseramentoDto.importo());
+            tesseramento.setDataPagamento(tesseramentoDto.dataPagamento());
+            socio.getTesseramenti().add(tesseramento);
+
+            if (tesseramentoDto.anno() == Year.now().getValue()) {
+                utente.setAttivo(true);
+            }
+        }
+
         Socio salvato = socioRepository.save(socio);
         return new SocioCreatoDto(socioMapper.toDto(salvato), passwordTemporanea);
     }
@@ -108,10 +125,48 @@ public class SocioService {
 
         int annoCorrente = Year.now().getValue();
         boolean inRegola = socio.getTesseramenti().stream().anyMatch(t -> t.getAnno() == annoCorrente);
-        if (socio.getUtente() != null) {
-            socio.getUtente().setAttivo(inRegola);
+        // Il pagamento della quota corrente riattiva l'account, ma non lo sospende mai:
+        // la sospensione manuale resta di competenza dell'admin e il mancato rinnovo è
+        // già gestito al login dal controllo di regolarità (calcolato al volo).
+        if (inRegola && socio.getUtente() != null) {
+            socio.getUtente().setAttivo(true);
         }
 
+        return socioMapper.toDto(socioRepository.save(socio));
+    }
+
+    public DettaglioSocioDto update(Long id, AggiornaSocioDto socioDto) {
+        Socio socio = socioRepository.findById(id)
+                .orElseThrow(() -> new RisorsaNonTrovataException("Socio con id " + id + " non trovato"));
+
+        String nuovaEmail = EmailUtils.normalizza(socioDto.email());
+        Utente utente = socio.getUtente();
+
+        // Se l'email cambia va tenuta allineata con l'account di login e resta unica.
+        if (utente != null && !nuovaEmail.equals(utente.getEmail())) {
+            utenteRepository.findByEmail(nuovaEmail)
+                    .filter(altro -> !altro.getId().equals(utente.getId()))
+                    .ifPresent(altro -> {
+                        throw new RisorsaGiaEsistenteException("Esiste già un account con email " + nuovaEmail);
+                    });
+            utente.setEmail(nuovaEmail);
+        }
+
+        socioMapper.updateEntity(socioDto, socio);
+        socio.setEmail(nuovaEmail);
+
+        return socioMapper.toDto(socioRepository.save(socio));
+    }
+
+    public DettaglioSocioDto impostaStatoAttivo(Long id, boolean attivo) {
+        Socio socio = socioRepository.findById(id)
+                .orElseThrow(() -> new RisorsaNonTrovataException("Socio con id " + id + " non trovato"));
+
+        if (socio.getUtente() == null) {
+            throw new RisorsaNonTrovataException("Il socio con id " + id + " non ha un account collegato");
+        }
+
+        socio.getUtente().setAttivo(attivo);
         return socioMapper.toDto(socioRepository.save(socio));
     }
 

@@ -98,7 +98,7 @@ class SocioMapperTest {
     @Test
     void toEntity_ignoraIdEUtente() {
         CreaSocioDto dto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
-                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15));
+                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), null);
 
         Socio socio = socioMapper.toEntity(dto);
 

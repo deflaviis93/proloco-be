@@ -4,8 +4,21 @@ Backend per la gestione della Pro Loco del paese di Nerito.
 
 ## Stato del progetto
 
-Progetto nuovo, in fase di avvio. Lo scheletro tecnico esiste (build Maven, Spring Boot,
-deploy Docker), il dominio applicativo (entità, endpoint, DB) è ancora da costruire.
+Fase 1 (gestione soci/utenti + autenticazione) implementata. Sono attivi:
+
+- **Auth**: `POST /api/auth/login`. Logout gestito lato client (JWT stateless).
+- **Soci** (`/api/soci`): lettura (`GET` lista, dettaglio, tesseramenti) aperta a qualsiasi
+  utente autenticato; scrittura (`POST` nuovo, `PUT /{id}` aggiorna, `PATCH /{id}/stato`
+  attiva/sospende, `POST /{id}/tesseramenti`) riservata a `ADMIN`/`GESTIONE_SOCI`.
+- **Utenti** (`/api/utenti`): lista/dettaglio/creazione/reset-password per `ADMIN`/`GESTIONE_SOCI`,
+  `PATCH /{id}/stato` (attiva/disattiva) solo `ADMIN`, `PATCH /{id}/password` per l'utente stesso o `ADMIN`.
+
+Login gate (`AuthService.puoAccedere`): `Utente.attivo` è l'unica sorgente di verità
+(sospensione manuale) e, per i soci, si aggiunge il controllo di regolarità con la quota
+dell'anno corrente (calcolato al volo). Il pagamento di un tesseramento corrente riattiva
+l'account ma non lo sospende mai automaticamente.
+
+Da costruire: eventi/manifestazioni.
 
 Nota: il progetto è partito su Jakarta EE puro + Open Liberty, poi migrato a Spring Boot
 per ridurre l'attrito operativo (jar eseguibile invece di application server, deploy più

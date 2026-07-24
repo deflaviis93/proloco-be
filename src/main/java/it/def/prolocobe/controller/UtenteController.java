@@ -1,5 +1,6 @@
 package it.def.prolocobe.controller;
 
+import it.def.prolocobe.dto.input.AggiornaStatoDto;
 import it.def.prolocobe.dto.input.CambiaPasswordDto;
 import it.def.prolocobe.dto.input.CreaUtenteDto;
 import it.def.prolocobe.dto.output.DettaglioUtenteDto;
@@ -44,8 +45,15 @@ public class UtenteController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','GESTIONE_SOCI')")
+    @ResponseStatus(HttpStatus.CREATED)
     public DettaglioUtenteDto create(@Valid @RequestBody CreaUtenteDto utenteDto) {
         return utenteService.create(utenteDto);
+    }
+
+    @PatchMapping("/{id}/stato")
+    @PreAuthorize("hasRole('ADMIN')")
+    public DettaglioUtenteDto impostaStato(@PathVariable Long id, @Valid @RequestBody AggiornaStatoDto statoDto) {
+        return utenteService.impostaStatoAttivo(id, statoDto.attivo());
     }
 
     @PatchMapping("/{id}/password")

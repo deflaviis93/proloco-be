@@ -1,5 +1,6 @@
 package it.def.prolocobe.service;
 
+import it.def.prolocobe.dto.input.AggiornaSocioDto;
 import it.def.prolocobe.dto.input.CreaSocioDto;
 import it.def.prolocobe.dto.input.CreaTesseramentoDto;
 import it.def.prolocobe.dto.output.DettaglioSocioDto;
@@ -74,11 +75,11 @@ class SocioServiceTest {
     @Test
     void create_generaPasswordTemporaneaEUtenteSempreSospesoAllaCreazione() {
         CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
-                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15));
+                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), null);
         Socio entity = new Socio();
         Socio savedEntity = new Socio();
         savedEntity.setId(1L);
-        DettaglioSocioDto savedDto = new DettaglioSocioDto(1L, "Mario", "Rossi", LocalDate.of(1980, 1, 1),
+        DettaglioSocioDto savedDto = new DettaglioSocioDto(1L, 10L, "Mario", "Rossi", LocalDate.of(1980, 1, 1),
                 "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), false, false);
 
         when(utenteRepository.findByEmail(inputDto.email())).thenReturn(Optional.empty());
@@ -102,7 +103,7 @@ class SocioServiceTest {
     @Test
     void create_normalizzaEmailInMinuscoloPerControlloESalvataggio() {
         CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
-                "3331234567", " Mario.Rossi@Example.COM ", LocalDate.of(2026, 1, 15));
+                "3331234567", " Mario.Rossi@Example.COM ", LocalDate.of(2026, 1, 15), null);
         Socio entity = new Socio();
 
         when(utenteRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.empty());
@@ -118,9 +119,49 @@ class SocioServiceTest {
     }
 
     @Test
+    void create_conTesseramentoAnnoCorrenteAttivaSubitoLAccount() {
+        int annoCorrente = Year.now().getValue();
+        CreaTesseramentoDto quota = new CreaTesseramentoDto(annoCorrente, new BigDecimal("15.00"), LocalDate.now());
+        CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
+                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), quota);
+        Socio entity = new Socio();
+
+        when(utenteRepository.findByEmail(inputDto.email())).thenReturn(Optional.empty());
+        when(socioMapper.toEntity(inputDto)).thenReturn(entity);
+        when(passwordEncoder.encode(any())).thenReturn("hash-fittizio");
+        when(socioRepository.save(entity)).thenReturn(entity);
+        when(socioMapper.toDto(entity)).thenReturn(null);
+
+        socioService.create(inputDto);
+
+        assertEquals(1, entity.getTesseramenti().size());
+        assertEquals(annoCorrente, entity.getTesseramenti().get(0).getAnno());
+        assertTrue(entity.getUtente().isAttivo());
+    }
+
+    @Test
+    void create_conTesseramentoDiAnnoPassatoLasciaLAccountSospeso() {
+        CreaTesseramentoDto quota = new CreaTesseramentoDto(2019, new BigDecimal("15.00"), LocalDate.of(2019, 3, 1));
+        CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
+                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), quota);
+        Socio entity = new Socio();
+
+        when(utenteRepository.findByEmail(inputDto.email())).thenReturn(Optional.empty());
+        when(socioMapper.toEntity(inputDto)).thenReturn(entity);
+        when(passwordEncoder.encode(any())).thenReturn("hash-fittizio");
+        when(socioRepository.save(entity)).thenReturn(entity);
+        when(socioMapper.toDto(entity)).thenReturn(null);
+
+        socioService.create(inputDto);
+
+        assertEquals(1, entity.getTesseramenti().size());
+        assertFalse(entity.getUtente().isAttivo());
+    }
+
+    @Test
     void create_lanciaEccezioneSeEmailGiaUsata() {
         CreaSocioDto inputDto = new CreaSocioDto("Mario", "Rossi", LocalDate.of(1980, 1, 1),
-                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15));
+                "3331234567", "mario.rossi@example.com", LocalDate.of(2026, 1, 15), null);
         when(utenteRepository.findByEmail(inputDto.email())).thenReturn(Optional.of(new Utente()));
 
         assertThrows(RisorsaGiaEsistenteException.class, () -> socioService.create(inputDto));
@@ -129,7 +170,7 @@ class SocioServiceTest {
     @Test
     void findAll_restituisceLaPaginaMappataDalRepository() {
         Socio socio = new Socio();
-        DettaglioSocioDto expectedDto = new DettaglioSocioDto(1L, "Mario", "Rossi", null, null, null, LocalDate.of(2026, 1, 15), false, false);
+        DettaglioSocioDto expectedDto = new DettaglioSocioDto(1L, 10L, "Mario", "Rossi", null, null, null, LocalDate.of(2026, 1, 15), false, false);
         Pageable pageable = PageRequest.of(0, 20);
 
         when(socioRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(socio)));
@@ -144,7 +185,7 @@ class SocioServiceTest {
     void findById_restituisceIlSocioMappatoQuandoEsiste() {
         Socio socio = new Socio();
         socio.setId(1L);
-        DettaglioSocioDto expected = new DettaglioSocioDto(1L, "Mario", "Rossi", null, null, null, LocalDate.of(2026, 1, 15), false, false);
+        DettaglioSocioDto expected = new DettaglioSocioDto(1L, 10L, "Mario", "Rossi", null, null, null, LocalDate.of(2026, 1, 15), false, false);
 
         when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
         when(socioMapper.toDto(socio)).thenReturn(expected);
@@ -172,7 +213,7 @@ class SocioServiceTest {
         int annoCorrente = Year.now().getValue();
         CreaTesseramentoDto tesseramentoDto = new CreaTesseramentoDto(annoCorrente, new BigDecimal("15.00"), LocalDate.now());
 
-        DettaglioSocioDto expected = new DettaglioSocioDto(1L, "Mario", "Rossi", null, null, null,
+        DettaglioSocioDto expected = new DettaglioSocioDto(1L, 10L, "Mario", "Rossi", null, null, null,
                 LocalDate.of(2026, 1, 15), true, true);
 
         when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
@@ -249,5 +290,87 @@ class SocioServiceTest {
         when(socioRepository.existsById(99L)).thenReturn(false);
 
         assertThrows(RisorsaNonTrovataException.class, () -> socioService.findTesseramenti(99L));
+    }
+
+    @Test
+    void update_aggiornaCampiESincronizzaEmailDellAccount() {
+        Utente utente = new Utente();
+        utente.setId(10L);
+        utente.setEmail("vecchia@example.com");
+        Socio socio = new Socio();
+        socio.setId(1L);
+        socio.setEmail("vecchia@example.com");
+        socio.setUtente(utente);
+
+        AggiornaSocioDto dto = new AggiornaSocioDto("Mario", "Bianchi", LocalDate.of(1980, 1, 1),
+                "3339999999", " Nuova@Example.COM ", LocalDate.of(2026, 1, 15));
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(utenteRepository.findByEmail("nuova@example.com")).thenReturn(Optional.empty());
+        when(socioRepository.save(socio)).thenReturn(socio);
+        when(socioMapper.toDto(socio)).thenReturn(null);
+
+        socioService.update(1L, dto);
+
+        assertEquals("nuova@example.com", socio.getEmail());
+        assertEquals("nuova@example.com", utente.getEmail());
+        verify(socioMapper).updateEntity(dto, socio);
+    }
+
+    @Test
+    void update_lanciaEccezioneSeNuovaEmailAppartieneAdAltroAccount() {
+        Utente utente = new Utente();
+        utente.setId(10L);
+        utente.setEmail("vecchia@example.com");
+        Socio socio = new Socio();
+        socio.setId(1L);
+        socio.setUtente(utente);
+
+        Utente altro = new Utente();
+        altro.setId(99L);
+
+        AggiornaSocioDto dto = new AggiornaSocioDto("Mario", "Bianchi", null, null,
+                "presa@example.com", LocalDate.of(2026, 1, 15));
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(utenteRepository.findByEmail("presa@example.com")).thenReturn(Optional.of(altro));
+
+        assertThrows(RisorsaGiaEsistenteException.class, () -> socioService.update(1L, dto));
+    }
+
+    @Test
+    void update_lanciaEccezioneQuandoSocioNonEsiste() {
+        AggiornaSocioDto dto = new AggiornaSocioDto("Mario", "Bianchi", null, null,
+                "mario@example.com", LocalDate.of(2026, 1, 15));
+        when(socioRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RisorsaNonTrovataException.class, () -> socioService.update(99L, dto));
+    }
+
+    @Test
+    void impostaStatoAttivo_aggiornaFlagSullAccountCollegato() {
+        Utente utente = new Utente();
+        utente.setAttivo(true);
+        Socio socio = new Socio();
+        socio.setId(1L);
+        socio.setUtente(utente);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+        when(socioRepository.save(socio)).thenReturn(socio);
+        when(socioMapper.toDto(socio)).thenReturn(null);
+
+        socioService.impostaStatoAttivo(1L, false);
+
+        assertFalse(utente.isAttivo());
+    }
+
+    @Test
+    void impostaStatoAttivo_lanciaEccezioneSeSocioSenzaAccount() {
+        Socio socio = new Socio();
+        socio.setId(1L);
+
+        when(socioRepository.findById(1L)).thenReturn(Optional.of(socio));
+
+        assertThrows(RisorsaNonTrovataException.class, () -> socioService.impostaStatoAttivo(1L, true));
     }
 }

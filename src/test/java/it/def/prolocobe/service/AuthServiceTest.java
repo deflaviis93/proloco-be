@@ -83,18 +83,17 @@ class AuthServiceTest {
 
         when(utenteRepository.findByEmail("admin@nerito.it")).thenReturn(Optional.of(utente));
         when(passwordEncoder.matches("password123", "hash")).thenReturn(true);
-        when(socioRepository.findByUtenteId(1L)).thenReturn(Optional.empty());
 
         assertThrows(AccountNonAttivoException.class, () -> authService.login(loginDto));
     }
 
     @Test
-    void login_consenteAccessoASocioConTesseramentoAnnoCorrenteAncheSeFlagAttivoEObsoleto() {
+    void login_consenteAccessoASocioAttivoConTesseramentoAnnoCorrente() {
         Utente utente = new Utente();
         utente.setId(1L);
         utente.setPasswordHash("hash");
         utente.setRuoli(Set.of(RuoloUtente.SOCIO));
-        utente.setAttivo(false);
+        utente.setAttivo(true);
         LoginDto loginDto = new LoginDto("mario.rossi@example.com", "password123");
 
         Socio socio = new Socio();
@@ -112,7 +111,23 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_negaAccessoASocioSenzaTesseramentoAnnoCorrenteAncheSeFlagAttivoEObsoleto() {
+    void login_negaAccessoASocioSospesoManualmenteAncheConTesseramentoCorrente() {
+        // Un socio in regola ma disattivato dall'admin (attivo = false) non deve poter accedere.
+        Utente utente = new Utente();
+        utente.setId(1L);
+        utente.setPasswordHash("hash");
+        utente.setRuoli(Set.of(RuoloUtente.SOCIO));
+        utente.setAttivo(false);
+        LoginDto loginDto = new LoginDto("mario.rossi@example.com", "password123");
+
+        when(utenteRepository.findByEmail("mario.rossi@example.com")).thenReturn(Optional.of(utente));
+        when(passwordEncoder.matches("password123", "hash")).thenReturn(true);
+
+        assertThrows(AccountNonAttivoException.class, () -> authService.login(loginDto));
+    }
+
+    @Test
+    void login_negaAccessoASocioAttivoSenzaTesseramentoAnnoCorrente() {
         Utente utente = new Utente();
         utente.setId(1L);
         utente.setPasswordHash("hash");

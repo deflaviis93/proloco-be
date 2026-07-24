@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public record DettaglioSocioDto(
         Long id,
+        Long utenteId,
         String nome,
         String cognome,
         LocalDate dataNascita,

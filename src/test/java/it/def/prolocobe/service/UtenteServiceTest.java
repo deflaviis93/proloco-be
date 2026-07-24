@@ -165,4 +165,27 @@ class UtenteServiceTest {
 
         assertThrows(RisorsaNonTrovataException.class, () -> utenteService.resetPassword(99L));
     }
+
+    @Test
+    void impostaStatoAttivo_aggiornaIlFlagESalva() {
+        Utente utente = new Utente();
+        utente.setAttivo(true);
+        DettaglioUtenteDto expected = new DettaglioUtenteDto(1L, "mario.rossi@example.com", Set.of(RuoloUtente.SOCIO), false, false);
+
+        when(utenteRepository.findById(1L)).thenReturn(Optional.of(utente));
+        when(utenteRepository.save(utente)).thenReturn(utente);
+        when(utenteMapper.toDto(utente)).thenReturn(expected);
+
+        DettaglioUtenteDto result = utenteService.impostaStatoAttivo(1L, false);
+
+        assertEquals(expected, result);
+        assertFalse(utente.isAttivo());
+    }
+
+    @Test
+    void impostaStatoAttivo_lanciaEccezioneQuandoUtenteNonEsiste() {
+        when(utenteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RisorsaNonTrovataException.class, () -> utenteService.impostaStatoAttivo(99L, true));
+    }
 }

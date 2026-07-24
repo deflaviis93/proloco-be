@@ -1,5 +1,6 @@
 package it.def.prolocobe.dto.input;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +14,9 @@ public record CreaSocioDto(
         @PastOrPresent LocalDate dataNascita,
         String telefono,
         @NotBlank @Email String email,
-        @NotNull @PastOrPresent LocalDate dataIscrizione
+        @NotNull @PastOrPresent LocalDate dataIscrizione,
+        // Opzionale: se il socio paga la quota già all'iscrizione, si registra subito il
+        // primo tesseramento (validato solo se presente).
+        @Valid CreaTesseramentoDto tesseramento
 ) {
 }

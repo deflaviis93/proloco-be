@@ -73,6 +73,14 @@ public class UtenteService {
         utenteRepository.save(utente);
     }
 
+    public DettaglioUtenteDto impostaStatoAttivo(Long id, boolean attivo) {
+        Utente utente = utenteRepository.findById(id)
+                .orElseThrow(() -> new RisorsaNonTrovataException("Utente con id " + id + " non trovato"));
+
+        utente.setAttivo(attivo);
+        return utenteMapper.toDto(utenteRepository.save(utente));
+    }
+
     public UtentePasswordResettataDto resetPassword(Long id) {
         Utente utente = utenteRepository.findById(id)
                 .orElseThrow(() -> new RisorsaNonTrovataException("Utente con id " + id + " non trovato"));

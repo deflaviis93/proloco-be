@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,6 +52,15 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.badRequest().body(new ErrorResponse("Errore di validazione", dettagli));
+    }
+
+    // Le negazioni di @PreAuthorize (Spring Security) lanciano AuthorizationDeniedException,
+    // sottotipo di AccessDeniedException: senza questo handler verrebbero inghiottite dal
+    // gestore generico e restituite come 500 invece del corretto 403.
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse("Non hai i permessi per questa operazione"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

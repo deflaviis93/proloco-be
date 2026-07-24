@@ -49,10 +49,17 @@ public class AuthService {
     }
 
     private boolean puoAccedere(Utente utente) {
-        int annoCorrente = Year.now().getValue();
+        // Un account manualmente sospeso (attivo = false) non accede mai, chiunque sia.
+        if (!utente.isAttivo()) {
+            return false;
+        }
 
+        // Se l'utente è collegato a un socio deve anche essere in regola con la quota
+        // dell'anno corrente. Il controllo è calcolato al volo, così resta corretto anche
+        // al cambio d'anno senza dover ricalcolare flag denormalizzati.
+        int annoCorrente = Year.now().getValue();
         return socioRepository.findByUtenteId(utente.getId())
                 .map(socio -> socio.getTesseramenti().stream().anyMatch(t -> t.getAnno() == annoCorrente))
-                .orElse(utente.isAttivo());
+                .orElse(true);
     }
 }
